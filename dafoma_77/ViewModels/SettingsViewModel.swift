@@ -60,3 +60,5 @@ class SettingsViewModel: ObservableObject {
         return Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 }
+
+

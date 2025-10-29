@@ -29,6 +29,9 @@ struct SettingsView: View {
                         // App info section
                         appInfoSection
                         
+                        // Learning stats section
+                        learningStatsSection
+                        
                         // Statistics section
                         statisticsSection
                         
@@ -95,6 +98,55 @@ struct SettingsView: View {
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
+            }
+        }
+        .padding(20)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(16)
+    }
+    
+    private var learningStatsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Learning Progress")
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(Color(hex: "#fcc418"))
+                    Text("Daily Word Streak")
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text("Check Daily Word feature!")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "#3cc45b"))
+                }
+                .padding(.vertical, 8)
+                
+                HStack {
+                    Image(systemName: "trophy.fill")
+                        .foregroundColor(Color(hex: "#3cc45b"))
+                    Text("Achievements")
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text("View in Achievements")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "#3cc45b"))
+                }
+                .padding(.vertical, 8)
+                
+                HStack {
+                    Image(systemName: "square.stack.3d.up.fill")
+                        .foregroundColor(Color(hex: "#fcc418"))
+                    Text("Flashcard Mastery")
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text("Study with Flashcards")
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "#3cc45b"))
+                }
+                .padding(.vertical, 8)
             }
         }
         .padding(20)
@@ -329,3 +381,5 @@ struct SettingsButton: View {
 #Preview {
     SettingsView(userService: UserService())
 }
+
+

@@ -11,8 +11,15 @@ struct HomeView: View {
     @StateObject private var dataService = DataService()
     @StateObject private var userService = UserService()
     @StateObject private var viewModel: HomeViewModel
+    @StateObject private var dailyWordService = DailyWordService()
+    @StateObject private var achievementService = AchievementService()
+    @StateObject private var flashcardService = FlashcardService()
+    
     @State private var selectedEntry: KnowledgeEntry?
     @State private var showingSettings = false
+    @State private var showingDailyWord = false
+    @State private var showingAchievements = false
+    @State private var showingFlashcards = false
     
     init() {
         let dataService = DataService()
@@ -50,45 +57,92 @@ struct HomeView: View {
             .sheet(item: $selectedEntry) { entry in
                 ContentDetailView(entry: entry, userService: userService, dataService: dataService)
             }
+            .sheet(isPresented: $showingDailyWord) {
+                DailyWordView(dailyWordService: dailyWordService, userService: userService)
+            }
+            .sheet(isPresented: $showingAchievements) {
+                AchievementsView(achievementService: achievementService)
+            }
+            .sheet(isPresented: $showingFlashcards) {
+                FlashcardView(flashcardService: flashcardService, entries: dataService.knowledgeEntries)
+            }
+            .onAppear {
+                dailyWordService.generateDailyWord(from: dataService.knowledgeEntries)
+                updateAchievements()
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .preferredColorScheme(.dark)
     }
     
     private var headerView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("KnowledgeVault")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
-                Text("Your comprehensive reference")
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 15) {
-                // Bookmarks filter toggle
-                Button(action: {
-                    withAnimation {
-                        viewModel.toggleBookmarksFilter()
-                    }
-                }) {
-                    Image(systemName: viewModel.showingBookmarksOnly ? "bookmark.fill" : "bookmark")
-                        .font(.title2)
-                        .foregroundColor(viewModel.showingBookmarksOnly ? Color(hex: "#fcc418") : .white)
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("KnowledgeVault")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text("Your comprehensive reference")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
                 }
                 
-                // Settings button
-                Button(action: {
-                    showingSettings = true
-                }) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title2)
-                        .foregroundColor(.white)
+                Spacer()
+                
+                HStack(spacing: 15) {
+                    // Bookmarks filter toggle
+                    Button(action: {
+                        withAnimation {
+                            viewModel.toggleBookmarksFilter()
+                        }
+                    }) {
+                        Image(systemName: viewModel.showingBookmarksOnly ? "bookmark.fill" : "bookmark")
+                            .font(.title2)
+                            .foregroundColor(viewModel.showingBookmarksOnly ? Color(hex: "#fcc418") : .white)
+                    }
+                    
+                    // Settings button
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                    }
+                }
+            }
+            
+            // Quick access features
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    FeatureButton(
+                        icon: "calendar.badge.clock",
+                        title: "Daily Word",
+                        color: "#fcc418",
+                        badge: !dailyWordService.hasViewedToday ? "NEW" : nil
+                    ) {
+                        showingDailyWord = true
+                    }
+                    
+                    FeatureButton(
+                        icon: "trophy.fill",
+                        title: "Achievements",
+                        color: "#3cc45b",
+                        badge: "\(achievementService.unlockedCount)"
+                    ) {
+                        showingAchievements = true
+                    }
+                    
+                    FeatureButton(
+                        icon: "square.stack.3d.up.fill",
+                        title: "Flashcards",
+                        color: "#fcc418",
+                        badge: nil
+                    ) {
+                        showingFlashcards = true
+                    }
                 }
             }
         }
@@ -228,6 +282,24 @@ struct HomeView: View {
         }
         .padding(.top, 60)
     }
+    
+    private func updateAchievements() {
+        // Update reading progress
+        let viewedCount = userService.activities.filter { $0.action == .viewEntry }.count
+        achievementService.checkReadingProgress(readCount: viewedCount)
+        
+        // Update streak
+        achievementService.checkStreakProgress(streak: dailyWordService.currentStreak)
+        
+        // Update bookmarks
+        achievementService.checkBookmarkProgress(bookmarkCount: userService.getBookmarksCount())
+        
+        // Update notes
+        achievementService.checkNotesProgress(notesCount: userService.getNotesCount())
+        
+        // Update search
+        achievementService.checkSearchProgress(searchCount: userService.getSearchCount())
+    }
 }
 
 struct CategoryButton: View {
@@ -322,6 +394,48 @@ struct EntryRowView: View {
     }
 }
 
+struct FeatureButton: View {
+    let icon: String
+    let title: String
+    let color: String
+    let badge: String?
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .foregroundColor(Color(hex: color))
+                    
+                    if let badge = badge {
+                        Text(badge)
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: color))
+                            .cornerRadius(8)
+                            .offset(x: 8, y: -8)
+                    }
+                }
+                
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+}
+
 #Preview {
     HomeView()
 }
+
+

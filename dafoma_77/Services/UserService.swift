@@ -166,3 +166,5 @@ class UserService: ObservableObject {
         return activities.filter { $0.action == .search }.count
     }
 }
+
+

@@ -58,3 +58,5 @@ struct UserActivity: Identifiable, Codable {
         case viewEntry = "View Entry"
     }
 }
+
+

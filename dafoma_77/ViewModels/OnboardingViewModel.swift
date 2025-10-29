@@ -66,3 +66,5 @@ struct OnboardingPage {
     let imageName: String
     let primaryColor: String
 }
+
+

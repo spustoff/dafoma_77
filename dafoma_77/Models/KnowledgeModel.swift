@@ -63,3 +63,5 @@ struct SearchResult: Identifiable {
         case relatedTerm
     }
 }
+
+
